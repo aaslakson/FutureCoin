@@ -21,6 +21,7 @@ export default function UserDashboard() {
     if (user?.id) {
       loadTransactions();
     }
+    // Only re-run when user.id changes, not when user object reference changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 

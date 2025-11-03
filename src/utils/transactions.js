@@ -6,6 +6,9 @@
 import { hashData, generateSecureToken } from '../utils/crypto.js';
 import { validateAmount, isValidWalletAddress } from '../utils/validation.js';
 
+// Transaction expiration time (5 minutes in milliseconds)
+const MAX_TRANSACTION_AGE_MS = 5 * 60 * 1000;
+
 /**
  * Transaction status enum
  */
@@ -77,6 +80,7 @@ export async function createTransaction({
  * @returns {Promise<string>} - Transaction signature
  */
 export async function signTransaction(transaction) {
+  // Extract signature from transaction data (intentionally not used, excluding from hash)
   // eslint-disable-next-line no-unused-vars
   const { signature, ...txData } = transaction;
   const dataString = JSON.stringify(txData);
@@ -121,8 +125,7 @@ export async function validateTransaction(transaction, userBalance) {
 
   // Check transaction age (prevent replay attacks)
   const transactionAge = Date.now() - new Date(transaction.timestamp).getTime();
-  const MAX_TRANSACTION_AGE = 5 * 60 * 1000; // 5 minutes
-  if (transactionAge > MAX_TRANSACTION_AGE) {
+  if (transactionAge > MAX_TRANSACTION_AGE_MS) {
     return { isValid: false, error: 'Transaction expired' };
   }
 

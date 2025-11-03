@@ -7,6 +7,9 @@ import { hashData, generateSecureToken } from '../utils/crypto.js';
 import { setSecureSession, getSecureSession, clearSession, STORAGE_KEYS } from '../utils/storage.js';
 import { isValidEmail, validatePassword } from '../utils/validation.js';
 
+// Session expiration time (24 hours in milliseconds)
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000;
+
 /**
  * Register a new user
  * @param {string} email - User email
@@ -104,7 +107,7 @@ export async function login(email, password) {
       userId: user.id,
       email: user.email,
       token: sessionToken,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+      expiresAt: new Date(Date.now() + SESSION_DURATION_MS).toISOString()
     };
 
     // Store session
@@ -177,7 +180,7 @@ export function getUserById(userId) {
   
   if (!user) return null;
 
-  // Return user without password hash
+  // Return user without password hash for security (intentionally not used, excluding from result)
   // eslint-disable-next-line no-unused-vars
   const { passwordHash, ...safeUser } = user;
   return safeUser;
