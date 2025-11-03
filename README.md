@@ -16,8 +16,14 @@ Our mission is to accelerate the transition to clean, sustainable energy through
 
 ## Features
 
-- **Buy & Sell**: Trade FutureCoin through our platform
-- **Marketplace Integration**: Designed for availability on all major cryptocurrency exchanges
+- **Secure Authentication**: User registration and login with encrypted password storage
+- **Digital Wallets**: Automatic wallet generation with unique FutureCoin addresses
+- **Buy & Sell**: Trade FutureCoin with transparent fee structure
+- **Transaction History**: Complete record of all transactions with digital signatures
+- **Encrypted Storage**: AES-256 encryption for sensitive user data
+- **Password Security**: Strong password requirements and SHA-256 hashing
+- **Session Management**: Secure 24-hour sessions with automatic expiration
+- **Marketplace Ready**: Designed for availability on all major cryptocurrency exchanges
 - **Transparent Funding**: Clear allocation of proceeds to clean energy development
 - **Community Driven**: Built for users who believe in a sustainable energy future
 
@@ -63,23 +69,43 @@ npm run lint
 ```
 FutureCoin/
 ├── src/
-│   ├── App.jsx          # Main application component
-│   ├── App.css          # Application styles
-│   ├── main.jsx         # Entry point
-│   └── index.css        # Global styles
-├── public/              # Static assets
-├── index.html           # HTML template
-└── package.json         # Dependencies and scripts
+│   ├── auth/             # Authentication services
+│   ├── components/       # React components (Login, Register, Dashboard)
+│   ├── contexts/         # React contexts (Auth)
+│   ├── utils/            # Utility functions (crypto, validation, storage, transactions)
+│   ├── App.jsx           # Main application component
+│   ├── App.css           # Application styles
+│   ├── main.jsx          # Entry point
+│   └── index.css         # Global styles
+├── public/               # Static assets
+├── index.html            # HTML template
+├── SECURITY.md           # Security documentation
+└── package.json          # Dependencies and scripts
 ```
+
+## Security
+
+FutureCoin implements industry-standard security practices:
+
+- **AES-GCM 256-bit encryption** for sensitive data
+- **PBKDF2 key derivation** with 100,000 iterations
+- **SHA-256 password hashing** and transaction signing
+- **XSS prevention** through input sanitization
+- **Replay attack prevention** for transactions
+- **Session management** with secure token generation
+
+For detailed security information, see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
 - [x] Initial website launch
+- [x] **User authentication and wallets** - Secure authentication system with encrypted wallet management
 - [ ] Marketplace integration
-- [ ] User authentication and wallets
-- [ ] Real-time trading platform
+- [ ] Real-time trading platform with live price feeds
 - [ ] Mobile application
 - [ ] Partnership announcements with fusion research institutions
+- [ ] Blockchain integration
+- [ ] Two-factor authentication
 
 ## Contributing
 
