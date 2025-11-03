@@ -1,19 +1,52 @@
 import { useState } from 'react'
 import './App.css'
+import { useAuth } from './contexts/AuthContext.jsx'
+import Login from './components/Login.jsx'
+import Register from './components/Register.jsx'
+import UserDashboard from './components/UserDashboard.jsx'
 
 function App() {
-  const [amount, setAmount] = useState('')
+  const [showRegister, setShowRegister] = useState(false)
+  const { user, loading } = useAuth()
 
-  const handleBuy = () => {
-    if (amount) {
-      alert(`Buy order for ${amount} FutureCoins will be processed. Marketplace integration coming soon!`)
-    }
+  if (loading) {
+    return (
+      <div className="app">
+        <header className="header">
+          <div className="logo-section">
+            <div className="logo">⚛️</div>
+            <h1>FutureCoin</h1>
+          </div>
+          <p className="tagline">Powering the Clean Energy Revolution</p>
+        </header>
+        <main className="main-content">
+          <div className="loading">Loading...</div>
+        </main>
+      </div>
+    )
   }
 
-  const handleSell = () => {
-    if (amount) {
-      alert(`Sell order for ${amount} FutureCoins will be processed. Marketplace integration coming soon!`)
-    }
+  if (user) {
+    return (
+      <div className="app">
+        <header className="header">
+          <div className="logo-section">
+            <div className="logo">⚛️</div>
+            <h1>FutureCoin</h1>
+          </div>
+          <p className="tagline">Powering the Clean Energy Revolution</p>
+        </header>
+        <main className="main-content">
+          <UserDashboard />
+        </main>
+        <footer className="footer">
+          <p>&copy; 2025 FutureCoin. Supporting clean energy development.</p>
+          <p className="disclaimer">
+            Cryptocurrency investments carry risks. Please invest responsibly.
+          </p>
+        </footer>
+      </div>
+    )
   }
 
   return (
@@ -36,33 +69,12 @@ function App() {
           </p>
         </section>
 
-        <section className="trading-section">
-          <h3>Buy & Sell FutureCoin</h3>
-          <div className="trading-card">
-            <div className="input-group">
-              <label htmlFor="amount">Amount (FTC)</label>
-              <input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <div className="button-group">
-              <button className="buy-button" onClick={handleBuy}>
-                Buy FutureCoin
-              </button>
-              <button className="sell-button" onClick={handleSell}>
-                Sell FutureCoin
-              </button>
-            </div>
-            <p className="notice">
-              * Marketplace integration in development
-            </p>
-          </div>
+        <section className="auth-section">
+          {showRegister ? (
+            <Register onSwitchToLogin={() => setShowRegister(false)} />
+          ) : (
+            <Login onSwitchToRegister={() => setShowRegister(true)} />
+          )}
         </section>
 
         <section className="info-section">

@@ -55,6 +55,17 @@
   width: 100%;
 }
 
+.loading {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.5rem;
+  color: #667eea;
+}
+
+.auth-section {
+  margin-bottom: 3rem;
+}
+
 .hero {
   margin-bottom: 3rem;
   text-align: center;
