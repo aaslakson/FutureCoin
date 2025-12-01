@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -6,11 +7,13 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      navigate('/');
     } catch (error) {
       setError(error.message);
     }
@@ -51,7 +54,7 @@ const Login = () => {
           </button>
         </form>
         <div className="w-full text-center">
-          <p className="text-gray-400">Don't have an account? <a className="font-medium text-primary hover:text-primary/80 transition-colors" href="#">Sign Up</a></p>
+          <p className="text-gray-400">Don't have an account? <Link to="/register" className="font-medium text-primary hover:text-primary/80 transition-colors">Sign Up</Link></p>
         </div>
         <div className="flex items-center gap-2 pt-4 text-gray-500">
           <span className="material-symbols-outlined text-base">lock</span>

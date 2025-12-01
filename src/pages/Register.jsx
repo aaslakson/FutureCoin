@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -8,6 +9,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -17,6 +19,7 @@ const Register = () => {
     }
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      navigate('/');
     } catch (error) {
       setError(error.message);
     }
@@ -74,7 +77,7 @@ const Register = () => {
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input className="form-checkbox mt-1 h-5 w-5 rounded border-[#3b5443] bg-[#1c271f] text-primary focus:ring-primary/50 focus:ring-offset-background-dark" type="checkbox"/>
                     <div className="flex-1">
-                      <p className="text-white text-base leading-normal">I agree to the <a className="text-primary hover:underline" href="#">Terms of Service</a> and <a className="text-primary hover:underline" href="#">Privacy Policy</a>.</p>
+                      <p className="text-white text-base leading-normal">I agree to the <Link className="text-primary hover:underline" to="/terms">Terms of Service</Link> and <Link className="text-primary hover:underline" to="/privacy">Privacy Policy</Link>.</p>
                     </div>
                   </label>
                 </div>
@@ -82,6 +85,9 @@ const Register = () => {
                   <button className="flex min-w-[180px] w-full md:w-auto cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-primary text-[#111813] text-base font-bold leading-normal tracking-[0.015em] hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
                     <span className="truncate">Create Account &amp; Continue</span>
                   </button>
+                </div>
+                <div className="w-full text-center mt-4">
+                  <p className="text-gray-400">Already have an account? <Link to="/login" className="font-medium text-primary hover:text-primary/80 transition-colors">Log In</Link></p>
                 </div>
               </form>
             </main>

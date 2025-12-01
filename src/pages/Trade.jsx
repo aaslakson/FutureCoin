@@ -1,18 +1,56 @@
 import { useState, useEffect } from 'react';
 import { getStockData, getCryptoData } from '../services/apiService';
+import { usePortfolio } from '../contexts/PortfolioContext';
 
 const Trade = () => {
   const [asset, setAsset] = useState({ symbol: 'BTC', name: 'Bitcoin', pair: 'BTC/USD', price: 65523.40, change: 2.45 });
+  const { balance, executeTrade } = usePortfolio();
+  const [amount, setAmount] = useState('');
+  const [orderType, setOrderType] = useState('Buy');
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const data = await getCryptoData(asset.symbol);
-      setAsset({ ...asset, price: data.price, change: data.percent_change });
+      setAsset(prev => ({ ...prev, price: data.price, change: data.percent_change }));
     };
 
-    const interval = setInterval(fetchData, 5000);
+    fetchData(); // Fetch immediately
+    const interval = setInterval(fetchData, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
-  }, [asset]);
+  }, [asset.symbol]);
+
+  const handleAmountChange = (e) => {
+    setAmount(e.target.value);
+  };
+
+  const handlePercentageClick = (percentage) => {
+    if (orderType === 'Buy') {
+      const maxBuy = balance / asset.price;
+      setAmount((maxBuy * percentage).toFixed(6));
+    } else {
+      // Logic for Sell percentage would require knowing holdings from context
+      // For now, let's just leave it or implement it if we pulled holdings in
+    }
+  };
+
+  const handleTrade = () => {
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      setFeedback({ type: 'error', message: 'Please enter a valid amount' });
+      return;
+    }
+
+    const result = executeTrade(orderType, asset.symbol, numAmount, asset.price);
+    setFeedback({ type: result.success ? 'success' : 'error', message: result.message });
+
+    if (result.success) {
+      setAmount('');
+      setTimeout(() => setFeedback(null), 3000);
+    }
+  };
+
+  const totalCost = (parseFloat(amount) || 0) * asset.price;
 
   return (
     <main className="flex-1 flex justify-center p-8 bg-background-dark overflow-y-auto">
@@ -25,10 +63,17 @@ const Trade = () => {
             </div>
             <div className="flex flex-col items-end gap-1 min-w-48">
               <p className="text-sm text-[#9db9a6]">Available Balance</p>
-              <p className="text-lg font-semibold text-white">12,450.75 USD</p>
+              <p className="text-lg font-semibold text-white">${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
         </header>
+
+        {feedback && (
+          <div className={`p-4 rounded-lg ${feedback.type === 'success' ? 'bg-green-900/50 text-green-200' : 'bg-red-900/50 text-red-200'}`}>
+            {feedback.message}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-4 bg-[#111813] p-6 rounded-xl">
             <div className="w-full">
@@ -37,33 +82,27 @@ const Trade = () => {
                   <div className="text-[#9db9a6] flex bg-[#28392e] items-center justify-center pl-4 rounded-l-lg">
                     <span className="material-symbols-outlined">search</span>
                   </div>
-                  <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-[#28392e] h-full placeholder:text-[#9db9a6] px-4 text-base font-normal leading-normal" placeholder="Search asset (e.g., BTC/USD, AAPL)" value={asset.pair} />
+                  <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border-none bg-[#28392e] h-full placeholder:text-[#9db9a6] px-4 text-base font-normal leading-normal" placeholder="Search asset (e.g., BTC/USD, AAPL)" value={asset.pair} readOnly />
                 </div>
               </label>
             </div>
             <div className="flex h-12 flex-1 items-center justify-center rounded-lg bg-[#28392e] p-1.5">
-              <label className="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-medium-blue has-[:checked]:shadow-lg has-[:checked]:text-white text-[#9db9a6] text-sm font-bold transition-all">
+              <label className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 ${orderType === 'Buy' ? 'bg-medium-blue shadow-lg text-white' : 'text-[#9db9a6]'} text-sm font-bold transition-all`}>
                 <span>BUY</span>
-                <input checked="" className="invisible w-0" name="order-action" type="radio" value="Buy" />
+                <input checked={orderType === 'Buy'} className="invisible w-0" name="order-action" type="radio" value="Buy" onChange={() => setOrderType('Buy')} />
               </label>
-              <label className="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 has-[:checked]:bg-red-accent has-[:checked]:shadow-lg has-[:checked]:text-white text-[#9db9a6] text-sm font-bold transition-all">
+              <label className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 ${orderType === 'Sell' ? 'bg-red-accent shadow-lg text-white' : 'text-[#9db9a6]'} text-sm font-bold transition-all`}>
                 <span>SELL</span>
-                <input className="invisible w-0" name="order-action" type="radio" value="Sell" />
+                <input checked={orderType === 'Sell'} className="invisible w-0" name="order-action" type="radio" value="Sell" onChange={() => setOrderType('Sell')} />
               </label>
             </div>
             <div className="w-full">
               <div className="flex border-b border-[#3b5443] gap-6">
-                <a className="flex items-center justify-center border-b-[3px] border-b-transparent text-[#9db9a6] pb-3 pt-2 hover:text-white transition-colors" href="#">
+                <a className="flex items-center justify-center border-b-[3px] border-b-primary text-white pb-3 pt-2" href="#">
                   <p className="text-sm font-bold leading-normal">Market</p>
                 </a>
-                <a className="flex items-center justify-center border-b-[3px] border-b-primary text-white pb-3 pt-2" href="#">
+                <a className="flex items-center justify-center border-b-[3px] border-b-transparent text-[#9db9a6] pb-3 pt-2 hover:text-white transition-colors" href="#">
                   <p className="text-sm font-bold leading-normal">Limit</p>
-                </a>
-                <a className="flex items-center justify-center border-b-[3px] border-b-transparent text-[#9db9a6] pb-3 pt-2 hover:text-white transition-colors" href="#">
-                  <p className="text-sm font-bold leading-normal">Stop</p>
-                </a>
-                <a className="flex items-center justify-center border-b-[3px] border-b-transparent text-[#9db9a6] pb-3 pt-2 hover:text-white transition-colors" href="#">
-                  <p className="text-sm font-bold leading-normal">Stop-Limit</p>
                 </a>
               </div>
             </div>
@@ -71,26 +110,27 @@ const Trade = () => {
               <div>
                 <label className="block text-sm font-medium text-[#9db9a6] mb-2" htmlFor="price">Price (USD)</label>
                 <div className="relative">
-                  <input className="form-input w-full bg-[#28392e] border-none rounded-lg text-white h-12 px-4 focus:ring-2 focus:ring-primary/50" id="price" type="text" value={asset.price.toLocaleString()} />
+                  <input className="form-input w-full bg-[#28392e] border-none rounded-lg text-white h-12 px-4 focus:ring-2 focus:ring-primary/50" id="price" type="text" value={asset.price.toLocaleString()} disabled />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[#9db9a6] mb-2" htmlFor="amount">Amount (BTC)</label>
+                <label className="block text-sm font-medium text-[#9db9a6] mb-2" htmlFor="amount">Amount ({asset.symbol})</label>
                 <div className="relative">
-                  <input className="form-input w-full bg-[#28392e] border-none rounded-lg text-white h-12 px-4 focus:ring-2 focus:ring-primary/50" id="amount" placeholder="0.00" type="text" />
+                  <input className="form-input w-full bg-[#28392e] border-none rounded-lg text-white h-12 px-4 focus:ring-2 focus:ring-primary/50" id="amount" placeholder="0.00" type="number" value={amount} onChange={handleAmountChange} />
                 </div>
                 <div className="flex justify-end gap-2 mt-2">
-                  <button className="text-xs font-semibold text-[#9db9a6] bg-[#28392e] hover:bg-medium-blue/50 hover:text-white rounded-full px-3 py-1 transition-colors">25%</button>
-                  <button className="text-xs font-semibold text-[#9db9a6] bg-[#28392e] hover:bg-medium-blue/50 hover:text-white rounded-full px-3 py-1 transition-colors">50%</button>
-                  <button className="text-xs font-semibold text-[#9db9a6] bg-[#28392e] hover:bg-medium-blue/50 hover:text-white rounded-full px-3 py-1 transition-colors">75%</button>
-                  <button className="text-xs font-semibold text-[#9db9a6] bg-[#28392e] hover:bg-medium-blue/50 hover:text-white rounded-full px-3 py-1 transition-colors">100%</button>
+                  {[0.25, 0.5, 0.75, 1].map((pct) => (
+                    <button key={pct} onClick={() => handlePercentageClick(pct)} className="text-xs font-semibold text-[#9db9a6] bg-[#28392e] hover:bg-medium-blue/50 hover:text-white rounded-full px-3 py-1 transition-colors">
+                      {pct * 100}%
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-4 bg-[#111813] p-6 rounded-xl">
             <div className="flex items-center gap-3">
-              <img alt="Bitcoin logo" className="h-10 w-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxY-eQ0K-s7kO7oPJH5PMaVy0giQCpfIMYLob_TLUclScJdIY21vaxqdY0X2fr7Wi6tIhfyDqdgNpZSCPBHekAzI0Xdff31Vd-kvy1eRHgwZoZzBLQrV0td1K_sD5_2bnHcPbfz-Zovde1Zhga4e6sQE5ywEYiTmtc_nxShckCDtRDmdF307m5HE28RtP_fhhqCigKWDgxOK3bxhlVbv2S38k_SbrC4KtovFqqQWCowiDN9bhWnLmVyDvxyDlECRrAUbdw4WTpmYQ" />
+              <img alt="Bitcoin logo" className="h-10 w-10" src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" />
               <div>
                 <p className="text-xl font-bold text-white">{asset.name} ({asset.symbol})</p>
                 <p className="text-sm text-[#9db9a6]">{asset.pair}</p>
@@ -113,29 +153,21 @@ const Trade = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <p className="text-[#9db9a6]">Order Type</p>
-                  <p className="font-medium text-white">Limit Buy</p>
+                  <p className="font-medium text-white">Market {orderType}</p>
                 </div>
                 <div className="flex justify-between">
                   <p className="text-[#9db9a6]">Amount</p>
-                  <p className="font-medium text-white">0.5 BTC</p>
-                </div>
-                <div className="flex justify-between">
-                  <p className="text-[#9db9a6]">Limit Price</p>
-                  <p className="font-medium text-white">$65,500.00</p>
+                  <p className="font-medium text-white">{amount || 0} {asset.symbol}</p>
                 </div>
                 <hr className="border-t border-[#28392e] my-1" />
-                <div className="flex justify-between">
-                  <p className="text-[#9db9a6]">Estimated Fees</p>
-                  <p className="font-medium text-white">$32.75</p>
-                </div>
                 <div className="flex justify-between text-base">
                   <p className="text-[#9db9a6]">Total Cost</p>
-                  <p className="font-bold text-white">$32,782.75</p>
+                  <p className="font-bold text-white">${totalCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                 </div>
               </div>
             </div>
-            <button className="w-full bg-medium-blue text-white font-bold py-3.5 rounded-lg text-base h-14 hover:bg-blue-700 transition-colors focus:outline-none focus:ring-4 focus:ring-medium-blue/30">
-              Place Buy Order
+            <button onClick={handleTrade} className={`w-full text-white font-bold py-3.5 rounded-lg text-base h-14 transition-colors focus:outline-none focus:ring-4 ${orderType === 'Buy' ? 'bg-medium-blue hover:bg-blue-700 focus:ring-medium-blue/30' : 'bg-red-accent hover:bg-red-700 focus:ring-red-accent/30'}`}>
+              Place {orderType} Order
             </button>
           </div>
         </div>

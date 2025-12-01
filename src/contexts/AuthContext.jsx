@@ -13,6 +13,18 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // For local testing with mock keys, we can bypass Firebase auth state listener
+    // if the keys are mocks. But to keep it simple, we'll try to listen.
+    // If it fails or hangs, we might need a fallback.
+
+    // MOCK USER FOR TESTING
+    if (import.meta.env.VITE_FIREBASE_API_KEY === 'mock_key') {
+       console.log("Using mock auth user");
+       setCurrentUser({ email: 'test@example.com', uid: 'test-uid' });
+       setLoading(false);
+       return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
       setLoading(false);
