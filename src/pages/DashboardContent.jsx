@@ -12,8 +12,15 @@ const DashboardContent = () => {
     { symbol: 'ETH', quantity: 25.1, price: 3514.88, pnl: -1109.40 },
   ]);
   
+  // FutureCoin accumulator constants
+  const BASE_ACCUMULATION_RATE = 0.0012; // Base coins per second
+  const FIBONACCI_MULTIPLIER_FACTOR = 0.1; // Growth acceleration factor
+  const CARBON_PER_COIN_KG = 9.2; // kg CO2 offset per FutureCoin
+  const FOREST_ACRES_PER_COIN = 0.41; // Acres of forest impact per FutureCoin
+  const FUSION_POWER_MW_PER_COIN = 0.0023; // Megawatts of fusion power funded per FutureCoin
+  
   // Passive FutureCoin accumulator with Fibonacci-inspired growth
-  const [coinBank, setCoinBank] = useState({
+  const [futureCoinState, setFutureCoinState] = useState({
     accumulated: 0,
     birthTimestamp: Date.now(),
     fibSeq: [1, 1],
@@ -29,14 +36,14 @@ const DashboardContent = () => {
   // Unique Fibonacci pulse accumulation for clean energy
   useEffect(() => {
     const pulseId = setInterval(() => {
-      setCoinBank(bank => {
-        const nextPulse = bank.pulseCount + 1;
-        const lifespan = (Date.now() - bank.birthTimestamp) / 1000;
-        const fibMultiplier = bank.fibSeq[bank.fibSeq.length - 1] / 1000000;
-        const wealthDelta = 0.0012 + (fibMultiplier * 0.1);
-        const newAccumulated = bank.accumulated + wealthDelta;
+      setFutureCoinState(state => {
+        const nextPulse = state.pulseCount + 1;
+        const elapsedSeconds = (Date.now() - state.birthTimestamp) / 1000;
+        const fibMultiplier = state.fibSeq[state.fibSeq.length - 1] / 1000000;
+        const wealthDelta = BASE_ACCUMULATION_RATE + (fibMultiplier * FIBONACCI_MULTIPLIER_FACTOR);
+        const newAccumulated = state.accumulated + wealthDelta;
         
-        const newFibSeq = [...bank.fibSeq];
+        const newFibSeq = [...state.fibSeq];
         if (nextPulse % 10 === 0 && newFibSeq.length < 20) {
           const last = newFibSeq[newFibSeq.length - 1];
           const secondLast = newFibSeq[newFibSeq.length - 2];
@@ -45,14 +52,14 @@ const DashboardContent = () => {
         
         return {
           accumulated: newAccumulated,
-          birthTimestamp: bank.birthTimestamp,
+          birthTimestamp: state.birthTimestamp,
           fibSeq: newFibSeq,
           pulseCount: nextPulse,
           environmentMetrics: {
-            carbonPrevented: (newAccumulated * 9.2).toFixed(1),
-            forestsGrown: (newAccumulated * 0.41).toFixed(2),
-            fusionPowerMW: (newAccumulated * 0.0023).toFixed(4),
-            lifespan: lifespan.toFixed(0),
+            carbonPrevented: (newAccumulated * CARBON_PER_COIN_KG).toFixed(1),
+            forestsGrown: (newAccumulated * FOREST_ACRES_PER_COIN).toFixed(2),
+            fusionPowerMW: (newAccumulated * FUSION_POWER_MW_PER_COIN).toFixed(4),
+            runtimeSeconds: elapsedSeconds.toFixed(0),
           }
         };
       });
@@ -99,12 +106,12 @@ const DashboardContent = () => {
               <div className="text-5xl">⚛️</div>
               <div>
                 <h2 className="text-3xl font-extrabold text-white">FutureCoin Wealth Builder</h2>
-                <p className="text-emerald-100 text-sm">Passively accumulating ecoins for fusion energy research</p>
+                <p className="text-emerald-100 text-sm">Passively accumulating EcoCoins for fusion energy research</p>
               </div>
             </div>
             <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/30">
               <p className="text-emerald-100 text-xs font-semibold">LIVE ACCUMULATION</p>
-              <p className="text-white text-3xl font-black">{coinBank.accumulated.toFixed(5)}</p>
+              <p className="text-white text-3xl font-black">{futureCoinState.accumulated.toFixed(5)}</p>
               <p className="text-emerald-200 text-xs">FutureCoins</p>
             </div>
           </div>
@@ -112,26 +119,26 @@ const DashboardContent = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
               <p className="text-emerald-200 text-xs font-medium mb-1">🌍 Carbon Offset</p>
-              <p className="text-white text-lg font-bold">{coinBank.environmentMetrics?.carbonPrevented || 0} kg CO₂</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.carbonPrevented || 0} kg CO₂</p>
             </div>
             <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
               <p className="text-emerald-200 text-xs font-medium mb-1">🌲 Forest Impact</p>
-              <p className="text-white text-lg font-bold">{coinBank.environmentMetrics?.forestsGrown || 0} acres</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.forestsGrown || 0} acres</p>
             </div>
             <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
               <p className="text-emerald-200 text-xs font-medium mb-1">⚡ Fusion Power</p>
-              <p className="text-white text-lg font-bold">{coinBank.environmentMetrics?.fusionPowerMW || 0} MW</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.fusionPowerMW || 0} MW</p>
             </div>
             <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
               <p className="text-emerald-200 text-xs font-medium mb-1">⏱️ Runtime</p>
-              <p className="text-white text-lg font-bold">{coinBank.environmentMetrics?.lifespan || 0}s</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.runtimeSeconds || 0}s</p>
             </div>
           </div>
           
           <div className="mt-4 bg-white/5 rounded-lg p-3">
             <p className="text-emerald-100 text-xs">
               <span className="font-semibold">Fibonacci Growth Active:</span> Using sequence growth pattern for accelerated wealth building • 
-              Current pulse #{coinBank.pulseCount} • 
+              Current pulse #{futureCoinState.pulseCount} • 
               All proceeds fund nuclear fusion research & deployment
             </p>
           </div>
