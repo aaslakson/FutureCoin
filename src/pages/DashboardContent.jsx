@@ -2,20 +2,71 @@ import { useState, useEffect } from 'react';
 import { getStockData, getCryptoData } from '../services/apiService';
 
 const DashboardContent = () => {
-  const [portfolioValue, setPortfolioValue] = useState(1250345.67);
-  const [dailyChange, setDailyChange] = useState(12483.21);
-  const [percentChange, setPercentChange] = useState(1.01);
+  const [portfolioValue] = useState(1250345.67);
+  const [dailyChange] = useState(12483.21);
+  const [percentChange] = useState(1.01);
   const [positions, setPositions] = useState([
     { symbol: 'TSLA', quantity: 150, price: 177.48, pnl: 2105.50 },
     { symbol: 'BTC', quantity: 5.25, price: 67910.12, pnl: -8421.15 },
     { symbol: 'AAPL', quantity: 200, price: 214.29, pnl: 5832.00 },
     { symbol: 'ETH', quantity: 25.1, price: 3514.88, pnl: -1109.40 },
   ]);
+  
+  // FutureCoin accumulator constants
+  const BASE_ACCUMULATION_RATE = 0.0012; // Base coins per second
+  const FIBONACCI_MULTIPLIER_FACTOR = 0.1; // Growth acceleration factor
+  const CARBON_PER_COIN_KG = 9.2; // kg CO2 offset per FutureCoin
+  const FOREST_ACRES_PER_COIN = 0.41; // Acres of forest impact per FutureCoin
+  const FUSION_POWER_MW_PER_COIN = 0.0023; // Megawatts of fusion power funded per FutureCoin
+  
+  // Passive FutureCoin accumulator with Fibonacci-inspired growth
+  const [futureCoinState, setFutureCoinState] = useState({
+    accumulated: 0,
+    birthTimestamp: Date.now(),
+    fibSeq: [1, 1],
+    pulseCount: 0,
+  });
+  
   const [watchlist, setWatchlist] = useState([
     { symbol: 'SPY', name: 'S&P 500 ETF', price: 546.30, change: 0.25 },
     { symbol: 'NVDA', name: 'NVIDIA Corp', price: 129.61, change: -1.15 },
     { symbol: 'DOW', name: 'Dow Jones Industrial', price: 39150.33, change: 0.04 },
   ]);
+
+  // Unique Fibonacci pulse accumulation for clean energy
+  useEffect(() => {
+    const pulseId = setInterval(() => {
+      setFutureCoinState(state => {
+        const nextPulse = state.pulseCount + 1;
+        const elapsedSeconds = (Date.now() - state.birthTimestamp) / 1000;
+        const fibMultiplier = state.fibSeq[state.fibSeq.length - 1] / 1000000;
+        const wealthDelta = BASE_ACCUMULATION_RATE + (fibMultiplier * FIBONACCI_MULTIPLIER_FACTOR);
+        const newAccumulated = state.accumulated + wealthDelta;
+        
+        const newFibSeq = [...state.fibSeq];
+        if (nextPulse % 10 === 0 && newFibSeq.length < 20) {
+          const last = newFibSeq[newFibSeq.length - 1];
+          const secondLast = newFibSeq[newFibSeq.length - 2];
+          newFibSeq.push(last + secondLast);
+        }
+        
+        return {
+          accumulated: newAccumulated,
+          birthTimestamp: state.birthTimestamp,
+          fibSeq: newFibSeq,
+          pulseCount: nextPulse,
+          environmentMetrics: {
+            carbonPrevented: (newAccumulated * CARBON_PER_COIN_KG).toFixed(1),
+            forestsGrown: (newAccumulated * FOREST_ACRES_PER_COIN).toFixed(2),
+            fusionPowerMW: (newAccumulated * FUSION_POWER_MW_PER_COIN).toFixed(4),
+            runtimeSeconds: elapsedSeconds.toFixed(0),
+          }
+        };
+      });
+    }, 1000);
+    
+    return () => clearInterval(pulseId);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +99,51 @@ const DashboardContent = () => {
         <p className="text-text-light-primary dark:text-text-dark-primary text-4xl font-black tracking-[-0.033em] min-w-72">Dashboard</p>
       </div>
       <div className="grid grid-cols-12 gap-6">
+        {/* FutureCoin Wealth Accumulator for Clean Energy */}
+        <div className="col-span-12 bg-gradient-to-r from-emerald-800 via-teal-700 to-green-800 rounded-2xl p-8 shadow-2xl border-2 border-emerald-600">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">⚛️</div>
+              <div>
+                <h2 className="text-3xl font-extrabold text-white">FutureCoin Wealth Builder</h2>
+                <p className="text-emerald-100 text-sm">Passively accumulating EcoCoins for fusion energy research</p>
+              </div>
+            </div>
+            <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/30">
+              <p className="text-emerald-100 text-xs font-semibold">LIVE ACCUMULATION</p>
+              <p className="text-white text-3xl font-black">{futureCoinState.accumulated.toFixed(5)}</p>
+              <p className="text-emerald-200 text-xs">FutureCoins</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
+              <p className="text-emerald-200 text-xs font-medium mb-1">🌍 Carbon Offset</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.carbonPrevented || 0} kg CO₂</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
+              <p className="text-emerald-200 text-xs font-medium mb-1">🌲 Forest Impact</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.forestsGrown || 0} acres</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
+              <p className="text-emerald-200 text-xs font-medium mb-1">⚡ Fusion Power</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.fusionPowerMW || 0} MW</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur p-4 rounded-xl border border-white/20">
+              <p className="text-emerald-200 text-xs font-medium mb-1">⏱️ Runtime</p>
+              <p className="text-white text-lg font-bold">{futureCoinState.environmentMetrics?.runtimeSeconds || 0}s</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-white/5 rounded-lg p-3">
+            <p className="text-emerald-100 text-xs">
+              <span className="font-semibold">Fibonacci Growth Active:</span> Using sequence growth pattern for accelerated wealth building • 
+              Current pulse #{futureCoinState.pulseCount} • 
+              All proceeds fund nuclear fusion research & deployment
+            </p>
+          </div>
+        </div>
+        
         <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
           <div className="bg-surface-light dark:bg-surface-dark rounded-xl p-6">
             <div className="flex min-w-72 flex-1 flex-col gap-2">
